@@ -62,27 +62,29 @@ func hostList(c *gin.Context) {
 	//db.Count(&cnt)
 	db.Find(&hosts)
 	response["total"] = total
-	for _, h := range hosts {
-		//获取主机关联的组
-		mydb.Joins("JOIN host_group ON host_group.group_id = group.id").
-			Where("host_group.host_id = ?", h.ID).Find(&h.Groups)
+	if page != 0 {
+		for _, h := range hosts {
+			//获取主机关联的组
+			mydb.Joins("JOIN host_group ON host_group.group_id = group.id").
+				Where("host_group.host_id = ?", h.ID).Find(&h.Groups)
 
-		//获取metric数量
-		mydb.Table("metric").Where("host_id = ?", h.ID).Count(&h.Metrics)
+			//获取metric数量
+			mydb.Table("metric").Where("host_id = ?", h.ID).Count(&h.Metrics)
 
-		//获取插件数量
-		mydb.Table("host_plugin").Where("host_id = ?", h.ID).Count(&h.Plugins)
+			//获取插件数量
+			mydb.Table("host_plugin").Where("host_id = ?", h.ID).Count(&h.Plugins)
 
-		//获取主机的策略数量
-		strategies := getStrategiesByHostID(h.ID)
-		for _, strategy := range strategies {
-			switch strategy.Type {
-			case types.STRATEGY_GLOBAL:
-				h.GlobalStrategies += 1
-			case types.STRATEGY_GROUP:
-				h.GroupStrategies += 1
-			case types.STRATEGY_HOST:
-				h.HostStrategies += 1
+			//获取主机的策略数量
+			strategies := getStrategiesByHostID(h.ID)
+			for _, strategy := range strategies {
+				switch strategy.Type {
+				case types.STRATEGY_GLOBAL:
+					h.GlobalStrategies += 1
+				case types.STRATEGY_GROUP:
+					h.GroupStrategies += 1
+				case types.STRATEGY_HOST:
+					h.HostStrategies += 1
+				}
 			}
 		}
 	}
